@@ -1,42 +1,37 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
+import os
 
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Allow frontend access
+CORS(app)
 
-# Configure Gemini API
-genai.configure(api_key="https://aistudio.google.com/app/apikey?_gl=1*n53vdc*_ga*MTI1Mzc0NzY1LjE3NDI0NTE3NDA.*_ga_P1DBVKWT6V*MTc0MjQ1NTYyMi4yLjAuMTc0MjQ1NTcyMC42MC4wLjk4MDE3NzUyOA..")  # Replace with your API key
+# Load API key from environment variable
+API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set")
 
-# Sample FAQ data
-FAQS = """
-You are a helpful FAQ chatbot. Answer based on these FAQs:
+genai.configure(api_key=API_KEY)
 
-1. **What are trading hours?**  
-   - The stock market operates from 9:30 AM to 4:00 PM EST.
-
-2. **How do I place a limit order?**  
-   - Go to 'Trade', select stock, choose 'Limit Order', enter price, and confirm.
-
-3. **How can I withdraw funds?**  
-   - Go to 'Account' > 'Withdraw Funds' > Enter amount > Confirm withdrawal.
-
-If unsure, respond: "I'm not sure. Contact support at support@trading.com."
-"""
-
-@app.route('/chat', methods=['POST'])
+# Define the chatbot endpoint
+@app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_query = data.get("query", "")
-
-    # Construct a query for Gemini
-    prompt = f"{FAQS}\n\nUser Query: {user_query}"
-    
     try:
-        response = genai.generate_text(prompt)  # Generate AI response
+        data = request.get_json()
+        user_input = data.get("message", "")
+
+        if not user_input:
+            return jsonify({"error": "Message is required"}), 400
+
+        # Ensure the correct model is used
+        model = genai.GenerativeModel("gemini-1.0-pro")  # Try "gemini-pro" if available
+        response = model.generate_content(user_input)
+
         return jsonify({"response": response.text})
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
