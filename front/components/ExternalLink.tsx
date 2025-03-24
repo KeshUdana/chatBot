@@ -1,24 +1,33 @@
-import { Link } from 'expo-router';
-import { openBrowserAsync } from 'expo-web-browser';
-import { type ComponentProps } from 'react';
-import { Platform } from 'react-native';
+import { Link, Href } from 'expo-router';
+import { ComponentProps } from 'react';
 
-type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: string };
+// Option 1: The most correct way - use Expo Router's Href type directly
+export function ExternalLink({ href, ...rest }: { href: Href } & ComponentProps<typeof Link>) {
+  return <Link href={href} {...rest} />;
+}
 
-export function ExternalLink({ href, ...rest }: Props) {
+// Option 2: If you need to restrict to specific paths
+type AllowedPaths = 
+  | "/(tabs)"
+  | "/(tabs)/explore"
+  | "/(tabs)/profile"
+  | "/"
+  | `/?${string}`
+  | `/#${string}`
+  | "/_sitemap"
+  | `/_sitemap?${string}`
+  | `/_sitemap#${string}`;
+
+export function RestrictedExternalLink({ href, ...rest }: { href: AllowedPaths } & ComponentProps<typeof Link>) {
+  return <Link href={href} {...rest} />;
+}
+
+// Usage examples:
+function ExampleUsage() {
   return (
-    <Link
-      target="_blank"
-      {...rest}
-      href={href}
-      onPress={async (event) => {
-        if (Platform.OS !== 'web') {
-          // Prevent the default behavior of linking to the default browser on native.
-          event.preventDefault();
-          // Open the link in an in-app browser.
-          await openBrowserAsync(href);
-        }
-      }}
-    />
+    <>
+      <ExternalLink href="/">Home</ExternalLink>
+
+    </>
   );
 }
