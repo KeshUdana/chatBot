@@ -1,0 +1,15 @@
+1. User (Mobile App - Flutter) 
+   │
+   ├── Sends message via HTTP POST
+   │
+2. Backend (Flask Server - Python) 
+   │
+   ├── Processes request with Gemini API
+   │
+3. Gemini AI (Google's LLM)
+   │
+   ├── Returns response
+   │
+4. Backend sends response to Flutter
+   │
+5. Flutter displays response in chat UI
